@@ -57,7 +57,8 @@ cosmic-bongo-blitz/
 
 - Sobrevive o máximo de tempo, derrotando inimigos e bosses!
 
-📜 Licença
-Projeto desenvolvido para fins educativos e de prática pessoal por Hélder Cruz.
-Feel free to fork e personalizar!
+## 📜 Licença
+
+- Projeto desenvolvido para fins educativos e de prática pessoal por Hélder Cruz.
+- Feel free to fork e personalizar!
 
