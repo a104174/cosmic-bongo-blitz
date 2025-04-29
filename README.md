@@ -47,14 +47,15 @@ cosmic-bongo-blitz/
 └── README.md
 ```
 
-🚀 Como Jogar
-Abre o ficheiro cosmic-bongo-blitz.html num navegador compatível (ex: Chrome, Edge).
+## 🚀 Como Jogar
 
-Carrega em "JOGAR" para começar.
+- Abre o ficheiro cosmic-bongo-blitz.html num navegador compatível (ex: Chrome, Edge).
 
-Move a tua nave com o rato e dispara automaticamente contra os inimigos.
+- Carrega em "JOGAR" para começar.
 
-Sobrevive o máximo de tempo, derrotando inimigos e bosses!
+- Move a tua nave com o rato e dispara automaticamente contra os inimigos.
+
+- Sobrevive o máximo de tempo, derrotando inimigos e bosses!
 
 📜 Licença
 Projeto desenvolvido para fins educativos e de prática pessoal por Hélder Cruz.
