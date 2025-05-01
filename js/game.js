@@ -237,7 +237,9 @@ function damagePlayer(){
 let prevTime=performance.now();
 function animate(t){
   requestAnimationFrame(animate);
-  const dt=(t-prevTime)/16.666; prevTime=t;
+  const dtRaw = (t - prevTime) / 16.666;
+  const dt = Math.min(dtRaw, 2.5); // limita máximo (protege contra lag spikes)  
+
   if(!playing||paused||!alive) return;
 
   /* spawns */
