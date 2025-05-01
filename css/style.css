@@ -1,104 +1,75 @@
-* { margin:0; padding:0; box-sizing:border-box; }
-html, body { width:100%; height:100%; overflow:hidden; background:#000; cursor:auto; }
-
-/* Overlay elements */
-#ui, #menu, #pause-menu, #countdown, #bossbar {
-  position:fixed;
-  font-family:Arial,Helvetica,sans-serif;
-  z-index:10;
-  text-shadow:0 0 4px #000;
-  color:#fff;
-}
-
-#ui {
-  top:10px; left:10px;
-  font-size:18px;
-  display:flex;
-  align-items:center;
-  gap:8px;
-}
-
-.heart {
-  width:24px; height:24px;
-  background:url('../assets/images/heart.png') center/contain no-repeat;
-}
-
-#volume-controls {
-  position:fixed; top:10px; right:10px;
-  font-size:18px; z-index:10;
-}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:Arial,Helvetica,sans-serif;cursor:auto;color:#fff}
 
 /* MENU */
-#menu {
-  top:0; left:0; width:100%; height:100%;
-  display:flex; flex-direction:column;
-  align-items:center; justify-content:center;
+#menu{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
   background:url('../assets/images/menu_screen.png') center/cover no-repeat;
-  opacity:0; transition:opacity 1.2s ease-in;
-  z-index:20;
+  opacity:0;transition:opacity 1s;z-index:20;
 }
-#menu.fade-in { opacity:1; }
-#menu button {
-  margin:10px; padding:12px 28px;
-  font-size:24px; border:none;
-  background:#ff69b4; color:#000; font-weight:bold;
-  cursor:pointer; border-radius:10px;
+#menu.fade-in{opacity:1;}
+#menu h1{font-size:48px;margin-bottom:20px;text-shadow:0 0 8px #000;}
+#best-label{margin-bottom:18px;font-size:20px;text-shadow:0 0 4px #000;}
+#menu button{
+  margin:10px;padding:12px 32px;font-size:24px;border:none;border-radius:10px;
+  background:#ff69b4;color:#000;font-weight:bold;cursor:pointer;
 }
-#exit-button {
-  position:absolute; bottom:30px; right:30px;
-  padding:10px 20px; font-size:18px; border-radius:8px;
+#exit-button{position:absolute;bottom:30px;right:30px;font-size:18px;padding:10px 20px}
+
+/* HUD */
+#ui,#pause-menu,#countdown,#bossbar{
+  position:fixed;z-index:10;text-shadow:0 0 4px #000;
+}
+#ui{top:10px;left:10px;font-size:18px;display:flex;align-items:center;gap:8px}
+.heart{width:24px;height:24px;background:url('../assets/images/heart.png') center/contain no-repeat}
+
+/* shield pulse */
+#shield-icon{
+  width:26px;height:26px;background:url('../assets/images/shield.png') center/contain no-repeat;
+  animation:pulse .8s infinite alternate;display:none
+}
+@keyframes pulse{from{transform:scale(1)}to{transform:scale(1.25)}}
+
+/* combo pop-up */
+#combo{
+  position:fixed;top:60px;left:50%;transform:translateX(-50%);
+  font-size:32px;font-weight:bold;pointer-events:none;
+  text-shadow:0 0 6px #000;opacity:0;transition:opacity .3s,transform .3s;
 }
 
-/* PAUSE */
-#pause-menu {
-  top:50%; left:50%; transform:translate(-50%,-50%);
-  text-align:center; opacity:0; transition:opacity .4s ease-in;
+/* boss bar */
+#bossbar{top:8px;left:50%;transform:translateX(-50%);width:300px;height:18px;border:2px solid #fff;border-radius:9px;display:none}
+#bossbar-inner{width:100%;height:100%;background:#ff3030;border-radius:7px;transition:width .2s}
+
+/* pause menu */
+#pause-menu{
+  top:50%;left:50%;transform:translate(-50%,-50%);
+  text-align:center;background:rgba(0,0,0,.6);padding:20px 30px;border-radius:10px;opacity:0;transition:opacity .4s
 }
-#pause-menu.fade-in { opacity:1; }
-#pause-menu button {
-  margin:10px; padding:10px 25px; font-size:20px;
-  border:none; background:#ff69b4; color:#000; font-weight:bold;
-  border-radius:8px; cursor:pointer;
+#pause-menu.fade-in{opacity:1;}
+#pause-menu button{
+  margin:10px;padding:10px 25px;font-size:20px;border:none;border-radius:8px;cursor:pointer;
+  background:#ff69b4;color:#000;font-weight:bold;
 }
 
-/* GAMEOVER */
-#gameover {
-  position:fixed; top:50%; left:50%;
-  transform:translate(-50%,-50%);
-  font-size:32px; text-align:center;
-  display:none; z-index:20; color:#fff;
+/* countdown */
+#countdown{top:50%;left:50%;transform:translate(-50%,-50%);font-size:110px;display:none;z-index:25}
+
+/* gameover */
+#gameover{
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+  text-align:center;color:#fff;display:none;z-index:30
 }
-#restart {
-  margin-top:12px; padding:8px 16px;
-  border:none; background:#ff69b4; color:#000;
-  font-weight:bold; font-size:18px; border-radius:8px;
-  cursor:pointer;
+#restart{margin-top:12px;padding:8px 16px;font-size:18px;border:none;border-radius:8px;background:#ff69b4;color:#000;font-weight:bold;cursor:pointer}
+
+/* volume */
+#volume-controls{position:fixed;top:10px;right:10px;font-size:18px;z-index:10}
+#volume-controls button{margin:0 4px;padding:2px 8px;font-size:18px}
+
+/* mini-radar */
+#radar{
+  position:fixed;bottom:20px;right:20px;border:2px solid #fff;border-radius:50%;background:rgba(0,0,0,.4);z-index:12
 }
 
-/* SHIELD HUD */
-#shield-icon {
-  width:26px; height:26px;
-  background:url('../assets/images/shield.png') center/contain no-repeat;
-  animation:pulse .8s infinite alternate;
-  display:none;
-}
-@keyframes pulse { from{transform:scale(1);} to{transform:scale(1.25);} }
-
-/* COUNTDOWN */
-#countdown {
-  top:50%; left:50%; transform:translate(-50%,-50%);
-  font-size:110px; display:none; z-index:25;
-}
-
-/* BOSS BAR */
-#bossbar {
-  top:8px; left:50%; transform:translateX(-50%);
-  width:300px; height:18px;
-  border:2px solid #fff; border-radius:9px;
-  display:none;
-}
-#bossbar-inner {
-  height:100%; background:#ff3030;
-  border-radius:7px; transition:width .2s;
-}
 
