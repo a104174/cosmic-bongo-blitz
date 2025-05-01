@@ -14,7 +14,8 @@ const COMBO_WINDOW         = 1500;   // ms
 /* ============================== */
 
 /* ---------- AUDIO ---------- */
-const bgMusic  = document.getElementById('bg-audio').src = './assets/audio/background.mp3';
+const bgMusic  = document.getElementById('bg-audio');   // ← elemento <audio>
+bgMusic.src    = './assets/audio/background.mp3';       //   (só atribuímos o src)
 const sfxLaser = document.getElementById('sfx-laser');
 const sfxHit   = document.getElementById('sfx-hit');
 const sfxPow   = document.getElementById('sfx-power');
