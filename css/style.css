@@ -20,7 +20,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:#000; cursor:a
 
 .heart {
   width:24px; height:24px;
-  background:url('../heart.png') center/contain no-repeat;
+  background:url('../assets/images/heart.png') center/contain no-repeat;
 }
 
 #volume-controls {
@@ -33,7 +33,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:#000; cursor:a
   top:0; left:0; width:100%; height:100%;
   display:flex; flex-direction:column;
   align-items:center; justify-content:center;
-  background:url('../menu_screen.png') center/cover no-repeat;
+  background:url('../assets/images/menu_screen.png') center/cover no-repeat;
   opacity:0; transition:opacity 1.2s ease-in;
   z-index:20;
 }
@@ -78,7 +78,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:#000; cursor:a
 /* SHIELD HUD */
 #shield-icon {
   width:26px; height:26px;
-  background:url('../shield.png') center/contain no-repeat;
+  background:url('../assets/images/shield.png') center/contain no-repeat;
   animation:pulse .8s infinite alternate;
   display:none;
 }
@@ -101,3 +101,4 @@ html, body { width:100%; height:100%; overflow:hidden; background:#000; cursor:a
   height:100%; background:#ff3030;
   border-radius:7px; transition:width .2s;
 }
+

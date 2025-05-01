@@ -2,14 +2,14 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.m
 
 /* ========= CONSTANTS ========= */
 const ENEMY_SPEED         = 0.045;
-const BOSS_INTERVAL       = 30_000;   // 30 s
+const BOSS_INTERVAL       = 30_000;
 const BOSS_HP_MAX         = 20;
 const LASER_SPEED         = 0.07;
-const BOSS_LASER_INTERVAL = 2_500;    // 2.5 s
+const BOSS_LASER_INTERVAL = 2_500;
 /* ============================= */
 
 /* ---------- AUDIO ---------- */
-const bgMusic  = document.getElementById('bg-audio');
+const bgMusic  = document.getElementById('bg-audio').src = './assets/audio/background.mp3';
 const sfxLaser = document.getElementById('sfx-laser');
 const sfxHit   = document.getElementById('sfx-hit');
 const sfxPow   = document.getElementById('sfx-power');
@@ -34,14 +34,14 @@ scene.add(new THREE.AmbientLight(0xffffff, 0.2));
 
 /* ---------- TEXTURES ---------- */
 const L = new THREE.TextureLoader();
-const shipTex   = L.load('./player.png');
-const alienTex  = L.load('./alien.png');
-const bossTex   = L.load('./boss.png');
-const heartTex  = L.load('./heart.png');
-const shieldTex = L.load('./shield.png');
-const doubleTex = L.load('./double.png');
-const slowTex   = L.load('./slow.png');
-L.load('./bg.png', t => scene.background = t);
+const shipTex   = L.load('./assets/images/player.png');
+const alienTex  = L.load('./assets/images/alien.png');
+const bossTex   = L.load('./assets/images/boss.png');
+const heartTex  = L.load('./assets/images/heart.png');
+const shieldTex = L.load('./assets/images/shield.png');
+const doubleTex = L.load('./assets/images/double.png');
+const slowTex   = L.load('./assets/images/slow.png');
+L.load('./assets/images/bg.png', t => scene.background = t);
 
 /* ---------- SPRITES ---------- */
 const player = new THREE.Sprite(new THREE.SpriteMaterial({map:shipTex, transparent:true}));
