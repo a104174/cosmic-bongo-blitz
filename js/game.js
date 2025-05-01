@@ -1,12 +1,15 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js';
 
-/* ========= CONSTANTS ========= */
-const ENEMY_SPEED         = 0.045;
-const BOSS_INTERVAL       = 30_000;
-const BOSS_HP_MAX         = 20;
-const LASER_SPEED         = 0.07;
-const BOSS_LASER_INTERVAL = 2_500;
-/* ============================= */
+/* ========= CONSTANTES ========= */
+const ENEMY_SPEED          = 0.045;
+const BOSS_INTERVAL        = 30_000;
+const BOSS_HP_MAX          = 20;
+const LASER_SPEED          = 0.07;
+const BOSS_LASER_INTERVAL  = 2_500;
+const BULLET_COOLDOWN      = 250;   // cadência (ms)
+const LASER_SOUND_COOLDOWN = 200;   // som, no máx. 5 vezes/seg
+const PARTICLE_LIFETIME    = 0.40;  // segundos
+/* ============================== */
 
 /* ---------- AUDIO ---------- */
 const bgMusic  = document.getElementById('bg-audio').src = './assets/audio/background.mp3';
@@ -16,7 +19,7 @@ const sfxPow   = document.getElementById('sfx-power');
 const sfxBoss  = document.getElementById('sfx-boss');
 function playSFX(el){
   const c = el.cloneNode();
-  c.volume = 0.5 + Math.random() * 0.3;
+  c.volume = 0.5 + Math.random()*0.3;    // volume aleatório 50–80 %
   c.play().catch(()=>{});
 }
 
@@ -34,13 +37,14 @@ scene.add(new THREE.AmbientLight(0xffffff, 0.2));
 
 /* ---------- TEXTURES ---------- */
 const L = new THREE.TextureLoader();
-const shipTex   = L.load('./assets/images/player.png');
-const alienTex  = L.load('./assets/images/alien.png');
-const bossTex   = L.load('./assets/images/boss.png');
-const heartTex  = L.load('./assets/images/heart.png');
-const shieldTex = L.load('./assets/images/shield.png');
-const doubleTex = L.load('./assets/images/double.png');
-const slowTex   = L.load('./assets/images/slow.png');
+const shipTex    = L.load('./assets/images/player.png');
+const alienTex   = L.load('./assets/images/alien.png');
+const bossTex    = L.load('./assets/images/boss.png');
+const heartTex   = L.load('./assets/images/heart.png');
+const shieldTex  = L.load('./assets/images/shield.png');
+const doubleTex  = L.load('./assets/images/double.png');
+const slowTex    = L.load('./assets/images/slow.png');
+const particleTex= L.load('./assets/images/particle.png');      // partícula
 L.load('./assets/images/bg.png', t => scene.background = t);
 
 /* ---------- SPRITES ---------- */
@@ -55,13 +59,19 @@ bossTemplate.visible = false;
 scene.add(bossTemplate);
 
 /* ---------- ARRAYS & STATE ---------- */
-const bullets = [], enemies = [], powerUps = [];
+const bullets   = [];
+const enemies   = [];
+const powerUps  = [];
+const particles = [];       // ← novo
+
 let boss=null, bossHP=0, lastBoss=0, lastBossShot=0;
 let bossLaser=null;
 let lastBullet=0, lastEnemy=0;
+let lastLaserSound = 0;
+
 let score=0, lives=3, playing=false, paused=false, alive=true;
 let shieldActive=false, doubleShot=false, slowMo=false;
-let shieldTimer, doubleTimer, slowTimer;
+let shieldTimer,doubleTimer,slowTimer;
 
 /* ---------- DOM refs ---------- */
 const menuEl   = document.getElementById('menu');
@@ -77,96 +87,88 @@ const bossIn   = document.getElementById('bossbar-inner');
 
 /* ---------- UI helpers ---------- */
 function renderLives(){
-  livesEl.innerHTML = '';
-  for(let i=0; i<lives; i++){
-    const h = document.createElement('div');
-    h.className = 'heart';
-    livesEl.appendChild(h);
+    livesEl.innerHTML='';
+    for(let i=0;i<lives;i++){
+      const h=document.createElement('div');
+      h.className='heart';
+      livesEl.appendChild(h);
+    }
   }
-}
-renderLives();
+  renderLives();
 
 /* ---------- MENU controls ---------- */
 document.getElementById('play').onclick = () => {
-  menuEl.style.display='none';
-  uiEl.style.display='flex';
-  volEl.style.display='block';
-  playing = true;
-  document.body.style.cursor='none';
-  bgMusic.volume = 0.4;
-  bgMusic.play().catch(()=>{});
-};
-document.getElementById('exit-button').onclick = () => window.close();
-document.getElementById('restart').onclick    = () => location.reload();
-document.getElementById('pause-exit').onclick = () => location.reload();
-document.getElementById('continue').onclick   = resumeCountdown;
-document.getElementById('volume-down').onclick= () => { bgMusic.volume=Math.max(0,bgMusic.volume-0.1); };
-document.getElementById('volume-up').onclick  = () => { bgMusic.volume=Math.min(1,bgMusic.volume+0.1); };
-
-/* ---------- INPUT ---------- */
-window.addEventListener('pointermove', e => {
-  const x=(e.clientX/innerWidth-0.5)*20;
-  const y=(-(e.clientY/innerHeight)+0.5)*12;
-  player.position.set(x,y,0);
-});
-window.addEventListener('resize', ()=>{
-  camera.aspect = innerWidth/innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth, innerHeight);
-});
-window.addEventListener('keydown', e=>{
-  if(e.key==='Escape' && playing && alive && !paused) enterPause();
-});
+    menuEl.style.display='none';
+    uiEl.style.display='flex';
+    volEl.style.display='block';
+    playing = true;
+    document.body.style.cursor='none';
+    bgMusic.volume = 0.4;
+    bgMusic.play().catch(()=>{});
+  };
+  document.getElementById('exit-button').onclick = ()=>window.close();
+  document.getElementById('restart').onclick    = ()=>location.reload();
+  document.getElementById('pause-exit').onclick = ()=>location.reload();
+  document.getElementById('continue').onclick   = resumeCountdown;
+  document.getElementById('volume-down').onclick= ()=>{bgMusic.volume=Math.max(0,bgMusic.volume-0.1);};
+  document.getElementById('volume-up').onclick  = ()=>{bgMusic.volume=Math.min(1,bgMusic.volume+0.1);};
+  
+  /* ---------- INPUT ---------- */
+  window.addEventListener('pointermove',e=>{
+    const x=(e.clientX/innerWidth-0.5)*20;
+    const y=(-(e.clientY/innerHeight)+0.5)*12;
+    player.position.set(x,y,0);
+  });
+  window.addEventListener('resize', ()=>{
+    camera.aspect=innerWidth/innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth,innerHeight);
+  });
+  window.addEventListener('keydown',e=>{
+    if(e.key==='Escape' && playing && alive && !paused) enterPause();
+  });
 
 /* ---------- PAUSE ---------- */
 function enterPause(){
-  paused=true;
-  document.body.style.cursor='auto';
-  pauseEl.style.display='block';
-  requestAnimationFrame(()=>pauseEl.classList.add('fade-in'));
-  bgMusic.pause();
-}
-function resumeCountdown(){
-  pauseEl.style.display='none';
-  countEl.style.display='block';
-  let c=3;
-  countEl.textContent=c;
-  const id=setInterval(()=>{
-    c--;
-    if(c>0){
-      countEl.textContent=c;
-    }else{
-      clearInterval(id);
-      countEl.style.display='none';
-      paused=false;
-      document.body.style.cursor='none';
-      bgMusic.play().catch(()=>{});
-    }
-  },1000);
-}
-
-/* ---------- SPAWNS ---------- */
-let lastLaserSound = 0;
-const LASER_SOUND_COOLDOWN = 150; // milissegundos
-
-function spawnBullet(){
-  const now = performance.now();
-  const mk=off=>{
-    const b=new THREE.Mesh(new THREE.BoxGeometry(0.12,0.9,0.12),
-                           new THREE.MeshBasicMaterial({color:0xff3030}));
-    b.position.copy(player.position);
-    b.position.x += off;
-    bullets.push(b);
-    scene.add(b);
-  };
-  doubleShot ? (mk(-0.25), mk(0.25)) : mk(0);
-  
-  if (now - lastLaserSound > LASER_SOUND_COOLDOWN) {
-    playSFX(sfxLaser);
-    lastLaserSound = now;
+    paused=true; document.body.style.cursor='auto';
+    pauseEl.style.display='block';
+    requestAnimationFrame(()=>pauseEl.classList.add('fade-in'));
+    bgMusic.pause();
   }
-}
-
+  function resumeCountdown(){
+    pauseEl.style.display='none';
+    countEl.style.display='block';
+    let c=3; countEl.textContent=c;
+    const id=setInterval(()=>{
+      c--; if(c>0){countEl.textContent=c;}
+      else{ clearInterval(id); countEl.style.display='none';
+            paused=false; document.body.style.cursor='none';
+            bgMusic.play().catch(()=>{}); }
+    },1000);
+  }
+/* ---------- SPAWNS ---------- */
+function spawnBullet(){
+    const now = performance.now();
+  
+    // cria 1 ou 2 lasers (cilindro magenta)
+    const mk=off=>{
+      const geo=new THREE.CylinderGeometry(0.08,0.08,1,6);
+      const mat=new THREE.MeshBasicMaterial({color:0xff66ff});
+      const b  =new THREE.Mesh(geo,mat);
+      b.rotation.z=Math.PI/2;
+      b.position.copy(player.position);
+      b.position.x+=off;
+      bullets.push(b);
+      scene.add(b);
+    };
+    doubleShot ? (mk(-0.25), mk(0.25)) : mk(0);
+  
+    // som com cool-down
+    if(now-lastLaserSound>LASER_SOUND_COOLDOWN){
+      playSFX(sfxLaser);
+      lastLaserSound=now;
+    }
+  }
 
 function spawnEnemy(){
   const s=1+(Math.random()-0.5)*0.6;
@@ -254,87 +256,62 @@ function damagePlayer(){
 
 /* ---------- MAIN LOOP ---------- */
 function animate(t){
-  requestAnimationFrame(animate);
-  if(!playing || paused || !alive) return;
-
-  /* spawns */
-  if(t-lastBullet>150){ spawnBullet(); lastBullet=t; }
-  if(t-lastEnemy >900){ spawnEnemy();  lastEnemy =t; }
-  if(!boss && t-lastBoss > BOSS_INTERVAL){ spawnBoss(); lastBoss=t; }
-
-  /* bullets */
-  bullets.forEach((b,i)=>{
-    b.position.y += 1;
-    if(boss && b.position.distanceTo(boss.position)<2){
-      scene.remove(b); bullets.splice(i,1);
-      bossHP--;
-      bossIn.style.width = `${(bossHP/BOSS_HP_MAX)*100}%`;
-      if(bossHP<=0){
-        boss.visible=false; boss=null; bossBar.style.display='none';
-        score+=10; scoreEl.textContent=score;
-        spawnPowerUp(player.position);
+    requestAnimationFrame(animate);
+    if(!playing || paused || !alive) return;
+  
+    /* spawns */
+    if(t-lastBullet>BULLET_COOLDOWN){ spawnBullet(); lastBullet=t; }
+    if(t-lastEnemy >900){ spawnEnemy(); lastEnemy=t; }
+    if(!boss && t-lastBoss>BOSS_INTERVAL){ spawnBoss(); lastBoss=t; }
+  
+    /* bullets + partículas */
+    bullets.forEach((b,i)=>{
+      b.position.y += 1;
+  
+      /* rasto */
+      if(Math.random()<0.45){
+        const p = new THREE.Sprite(
+          new THREE.SpriteMaterial({
+            map:particleTex,
+            color:0xff66ff,
+            transparent:true,
+            opacity:0.6
+          }));
+        p.scale.set(0.25,0.25,1);
+        p.position.copy(b.position);
+        particles.push({sprite:p,life:PARTICLE_LIFETIME});
+        scene.add(p);
       }
-      return;
-    }
-    if(b.position.y>15){ scene.remove(b); bullets.splice(i,1); }
-  });
-
-  /* boss laser */
-  if(bossLaser){
-    bossLaser.position.addScaledVector(bossLaser.userData.dir, LASER_SPEED);
-    if(bossLaser.position.distanceTo(player.position)<1.2){
-      if(!shieldActive) damagePlayer();
-      scene.remove(bossLaser); bossLaser=null;
-    }else if(Math.abs(bossLaser.position.x)>20 || Math.abs(bossLaser.position.y)>20){
-      scene.remove(bossLaser); bossLaser=null;
-    }
-  }
-
-  /* enemies */
-  enemies.forEach((e,ei)=>{
-    e.position.add(e.userData.dir);
-    if(e.position.length()>20){ scene.remove(e); enemies.splice(ei,1); return; }
-    if(e.position.distanceTo(player.position)<0.8){
-      if(!shieldActive) damagePlayer();
-      scene.remove(e); enemies.splice(ei,1); return;
-    }
-    bullets.forEach((b,bi)=>{
-      if(e.position.distanceTo(b.position)<0.8){
-        scene.remove(e); enemies.splice(ei,1);
-        scene.remove(b); bullets.splice(bi,1);
-        playSFX(sfxHit);
-        score++; scoreEl.textContent=score;
-        if(Math.random()<0.35) spawnPowerUp(e.position);
+  
+      /* colisões / remoção (igual ao teu código) */
+      if(boss && b.position.distanceTo(boss.position)<2){
+        scene.remove(b); bullets.splice(i,1);
+        bossHP--; bossIn.style.width=`${(bossHP/BOSS_HP_MAX)*100}%`;
+        if(bossHP<=0){
+          boss.visible=false; boss=null; bossBar.style.display='none';
+          score+=10; scoreEl.textContent=score;
+          spawnPowerUp(player.position);
+        }
+        return;
+      }
+      if(b.position.y>15){ scene.remove(b); bullets.splice(i,1); }
+    });
+  
+    /* partículas fade */
+    particles.forEach((p,i)=>{
+      p.life-=0.016;
+      p.sprite.material.opacity=p.life/PARTICLE_LIFETIME;
+      if(p.life<=0){
+        scene.remove(p.sprite);
+        particles.splice(i,1);
       }
     });
-  });
-
-  /* boss movement & shooting */
-  if(boss){
-    boss.position.y -= 0.02;
-    boss.rotation.z += 0.01;
-    if(boss.position.y<4) boss.position.y=4;
-    if(t-lastBossShot>BOSS_LASER_INTERVAL){
-      spawnBossLaser();
-      lastBossShot=t;
-    }
+  
+    /* bossLaser, enemies, boss movement, power-ups  – mantém igual */
+  
+    renderer.render(scene,camera);
   }
-
-  /* power-ups */
-  powerUps.forEach((p,pi)=>{
-    p.position.y -= 0.025;
-    if(p.position.distanceTo(player.position)<0.8){
-      collect(p.userData.type);
-      scene.remove(p); powerUps.splice(pi,1);
-    }else if(p.position.y<-15){
-      scene.remove(p); powerUps.splice(pi,1);
-    }
-  });
-
-  /* render */
-  renderer.render(scene,camera);
-}
-requestAnimationFrame(animate);
+  requestAnimationFrame(animate);
 
 /* ---------- GAMEOVER ---------- */
 function gameOver(){
