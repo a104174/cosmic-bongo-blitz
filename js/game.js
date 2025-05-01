@@ -264,11 +264,13 @@ let prevTime = performance.now();   // ← novo
 function animate(t){
     requestAnimationFrame(animate);
   
-    /* delta-time normalizado (1.0 ≃ 60 fps) */
-    const dt = (t - prevTime) / 16.666;   // 16,666 ms = 60 fps
-    prevTime = t;
-  
-    if(!playing || paused || !alive) return;
+  /* delta-time normalizado
+     – limita MIN a 1 para não abrandar quando os FPS > 60     */
+     const dtRaw = (t - prevTime) / 16.666;
+     const dt    = Math.max(dtRaw, 1);        //  ← ESTA linha mudou
+     prevTime = t;
+   
+     if(!playing || paused || !alive) return;
   
     /* spawns com base no tempo real (mantém) */
     if(t - lastBullet > BULLET_COOLDOWN){ spawnBullet(); lastBullet = t; }
@@ -277,7 +279,7 @@ function animate(t){
   
     /* -------- BULLETS + partículas -------- */
     bullets.forEach((b,i)=>{
-      b.position.y += 1 * dt;                        // ← escalado por dt
+      b.position.y += 1.2 * dt;                        // ← escalado por dt
   
       /* rasto */
       if(Math.random() < PARTICLE_CHANCE){
@@ -292,7 +294,7 @@ function animate(t){
         scene.add(p);
       }
   
-      /* colisões … (mantém igual) */
+      /* colisões */
       if(boss && b.position.distanceTo(boss.position) < 2){
         scene.remove(b); bullets.splice(i,1);
         bossHP--; bossIn.style.width = `${(bossHP/BOSS_HP_MAX)*100}%`;
@@ -308,17 +310,17 @@ function animate(t){
   
     /* -------- PARTÍCULAS fade -------- */
     particles.forEach((p,i)=>{
-      p.life -= 0.016 * dt;
-      p.sprite.material.opacity = p.life / PARTICLE_LIFETIME;
-      if(p.life <= 0){
-        scene.remove(p.sprite);
-        particles.splice(i,1);
-      }
-    });
+        p.life -= 0.016 * dt;
+        p.sprite.material.opacity = p.life / PARTICLE_LIFETIME;
+        if(p.life <= 0){
+          scene.remove(p.sprite);
+          particles.splice(i,1);
+        }
+      });
   
     /* -------- ENEMIES -------- */
     enemies.forEach((e,ei)=>{
-      e.position.addScaledVector(e.userData.dir, dt);   // ← escalado
+      e.position.addScaledVector(e.userData.dir, 1.25*dt);   // ← escalado
   
       if(e.position.length() > 20){
         scene.remove(e); enemies.splice(ei,1); return;
@@ -340,8 +342,8 @@ function animate(t){
   
     /* -------- BOSS MOVEMENT & SHOTS -------- */
     if(boss){
-      boss.position.y -= 0.02 * dt;                // ← escalado
-      boss.rotation.z += 0.01 * dt;
+      boss.position.y -= 0.03 * dt;                // ← escalado
+      boss.rotation.z += 0.015 * dt;
       if(boss.position.y < 4) boss.position.y = 4;
   
       if(t - lastBossShot > BOSS_LASER_INTERVAL){
@@ -353,7 +355,7 @@ function animate(t){
     /* boss laser */
     if(bossLaser){
       bossLaser.position.addScaledVector(bossLaser.userData.dir,
-                                         LASER_SPEED * dt);       // ← escalado
+                                         LASER_SPEED * 1.3 * dt);       // ← escalado
       if(bossLaser.position.distanceTo(player.position) < 1.2){
         if(!shieldActive) damagePlayer();
         scene.remove(bossLaser); bossLaser = null;
@@ -365,7 +367,7 @@ function animate(t){
   
     /* -------- POWER-UPS -------- */
     powerUps.forEach((p,pi)=>{
-      p.position.y -= 0.025 * dt;                 // ← escalado
+      p.position.y -= 0.045 * dt;                 // ← escalado
       if(p.position.distanceTo(player.position) < 0.8){
         collect(p.userData.type);
         scene.remove(p); powerUps.splice(pi,1);
