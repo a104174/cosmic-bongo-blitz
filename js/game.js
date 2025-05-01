@@ -1,7 +1,7 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js';
 
 /* ========= CONSTANTES ========= */
-const ENEMY_SPEED         = 0.05;
+const ENEMY_SPEED         = 0.0475;
 const BOSS_INTERVAL       = 30_000;
 const BOSS_HP_MAX         = 20;
 const LASER_SPEED         = 0.07;
