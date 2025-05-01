@@ -259,59 +259,120 @@ function damagePlayer(){
 }
 
 /* ---------- MAIN LOOP ---------- */
+let prevTime = performance.now();   // ← novo
+
 function animate(t){
     requestAnimationFrame(animate);
+  
+    /* delta-time normalizado (1.0 ≃ 60 fps) */
+    const dt = (t - prevTime) / 16.666;   // 16,666 ms = 60 fps
+    prevTime = t;
+  
     if(!playing || paused || !alive) return;
   
-    /* spawns */
-    if(t-lastBullet>BULLET_COOLDOWN){ spawnBullet(); lastBullet=t; }
-    if(t-lastEnemy >900){ spawnEnemy(); lastEnemy=t; }
-    if(!boss && t-lastBoss>BOSS_INTERVAL){ spawnBoss(); lastBoss=t; }
+    /* spawns com base no tempo real (mantém) */
+    if(t - lastBullet > BULLET_COOLDOWN){ spawnBullet(); lastBullet = t; }
+    if(t - lastEnemy  > 900){             spawnEnemy();  lastEnemy  = t; }
+    if(!boss && t - lastBoss > BOSS_INTERVAL){ spawnBoss(); lastBoss = t; }
   
-    /* bullets + partículas */
+    /* -------- BULLETS + partículas -------- */
     bullets.forEach((b,i)=>{
-      b.position.y += 1;
+      b.position.y += 1 * dt;                        // ← escalado por dt
   
       /* rasto */
-      if (Math.random() < PARTICLE_CHANCE) {
+      if(Math.random() < PARTICLE_CHANCE){
         const p = new THREE.Sprite(
           new THREE.SpriteMaterial({
-            map:particleTex,
-            color:0xff66ff,
-            transparent:true,
-            opacity:0.6
+            map:particleTex, color:0xff66ff,
+            transparent:true, opacity:0.6
           }));
         p.scale.set(0.25,0.25,1);
         p.position.copy(b.position);
-        particles.push({sprite:p,life:PARTICLE_LIFETIME});
+        particles.push({sprite:p, life:PARTICLE_LIFETIME});
         scene.add(p);
       }
   
-      /* colisões / remoção (igual ao teu código) */
-      if(boss && b.position.distanceTo(boss.position)<2){
+      /* colisões … (mantém igual) */
+      if(boss && b.position.distanceTo(boss.position) < 2){
         scene.remove(b); bullets.splice(i,1);
-        bossHP--; bossIn.style.width=`${(bossHP/BOSS_HP_MAX)*100}%`;
-        if(bossHP<=0){
-          boss.visible=false; boss=null; bossBar.style.display='none';
-          score+=10; scoreEl.textContent=score;
+        bossHP--; bossIn.style.width = `${(bossHP/BOSS_HP_MAX)*100}%`;
+        if(bossHP <= 0){
+          boss.visible = false; boss = null; bossBar.style.display='none';
+          score += 10; scoreEl.textContent = score;
           spawnPowerUp(player.position);
         }
         return;
       }
-      if(b.position.y>15){ scene.remove(b); bullets.splice(i,1); }
+      if(b.position.y > 15){ scene.remove(b); bullets.splice(i,1); }
     });
   
-    /* partículas fade */
+    /* -------- PARTÍCULAS fade -------- */
     particles.forEach((p,i)=>{
-      p.life-=0.016;
-      p.sprite.material.opacity=p.life/PARTICLE_LIFETIME;
-      if(p.life<=0){
+      p.life -= 0.016 * dt;
+      p.sprite.material.opacity = p.life / PARTICLE_LIFETIME;
+      if(p.life <= 0){
         scene.remove(p.sprite);
         particles.splice(i,1);
       }
     });
   
-    /* bossLaser, enemies, boss movement, power-ups  – mantém igual */
+    /* -------- ENEMIES -------- */
+    enemies.forEach((e,ei)=>{
+      e.position.addScaledVector(e.userData.dir, dt);   // ← escalado
+  
+      if(e.position.length() > 20){
+        scene.remove(e); enemies.splice(ei,1); return;
+      }
+      if(e.position.distanceTo(player.position) < 0.8){
+        if(!shieldActive) damagePlayer();
+        scene.remove(e); enemies.splice(ei,1); return;
+      }
+      bullets.forEach((b,bi)=>{
+        if(e.position.distanceTo(b.position) < 0.8){
+          scene.remove(e); enemies.splice(ei,1);
+          scene.remove(b); bullets.splice(bi,1);
+          playSFX(sfxHit);
+          score++; scoreEl.textContent = score;
+          if(Math.random() < 0.35) spawnPowerUp(e.position);
+        }
+      });
+    });
+  
+    /* -------- BOSS MOVEMENT & SHOTS -------- */
+    if(boss){
+      boss.position.y -= 0.02 * dt;                // ← escalado
+      boss.rotation.z += 0.01 * dt;
+      if(boss.position.y < 4) boss.position.y = 4;
+  
+      if(t - lastBossShot > BOSS_LASER_INTERVAL){
+        spawnBossLaser();
+        lastBossShot = t;
+      }
+    }
+  
+    /* boss laser */
+    if(bossLaser){
+      bossLaser.position.addScaledVector(bossLaser.userData.dir,
+                                         LASER_SPEED * dt);       // ← escalado
+      if(bossLaser.position.distanceTo(player.position) < 1.2){
+        if(!shieldActive) damagePlayer();
+        scene.remove(bossLaser); bossLaser = null;
+      }else if(Math.abs(bossLaser.position.x) > 20 ||
+               Math.abs(bossLaser.position.y) > 20){
+        scene.remove(bossLaser); bossLaser = null;
+      }
+    }
+  
+    /* -------- POWER-UPS -------- */
+    powerUps.forEach((p,pi)=>{
+      p.position.y -= 0.025 * dt;                 // ← escalado
+      if(p.position.distanceTo(player.position) < 0.8){
+        collect(p.userData.type);
+        scene.remove(p); powerUps.splice(pi,1);
+      }else if(p.position.y < -15){
+        scene.remove(p); powerUps.splice(pi,1);
+      }
+    });
   
     renderer.render(scene,camera);
   }
