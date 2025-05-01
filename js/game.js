@@ -16,7 +16,7 @@ const sfxPow   = document.getElementById('sfx-power');
 const sfxBoss  = document.getElementById('sfx-boss');
 function playSFX(el){
   const c = el.cloneNode();
-  c.volume = 0.75;
+  c.volume = 0.5 + Math.random() * 0.3;
   c.play().catch(()=>{});
 }
 
@@ -146,7 +146,11 @@ function resumeCountdown(){
 }
 
 /* ---------- SPAWNS ---------- */
+let lastLaserSound = 0;
+const LASER_SOUND_COOLDOWN = 150; // milissegundos
+
 function spawnBullet(){
+  const now = performance.now();
   const mk=off=>{
     const b=new THREE.Mesh(new THREE.BoxGeometry(0.12,0.9,0.12),
                            new THREE.MeshBasicMaterial({color:0xff3030}));
@@ -156,8 +160,13 @@ function spawnBullet(){
     scene.add(b);
   };
   doubleShot ? (mk(-0.25), mk(0.25)) : mk(0);
-  playSFX(sfxLaser);
+  
+  if (now - lastLaserSound > LASER_SOUND_COOLDOWN) {
+    playSFX(sfxLaser);
+    lastLaserSound = now;
+  }
 }
+
 
 function spawnEnemy(){
   const s=1+(Math.random()-0.5)*0.6;
