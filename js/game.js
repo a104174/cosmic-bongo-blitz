@@ -8,7 +8,8 @@ const LASER_SPEED          = 0.07;
 const BOSS_LASER_INTERVAL  = 2_500;
 const BULLET_COOLDOWN      = 250;   // cadência (ms)
 const LASER_SOUND_COOLDOWN = 200;   // som, no máx. 5 vezes/seg
-const PARTICLE_LIFETIME    = 0.40;  // segundos
+const PARTICLE_LIFETIME = 0.25;    // dura menos
+const PARTICLE_CHANCE   = 0.20;    // 20% de chance por frame
 /* ============================== */
 
 /* ---------- AUDIO ---------- */
@@ -150,25 +151,28 @@ function enterPause(){
 function spawnBullet(){
     const now = performance.now();
   
-    // cria 1 ou 2 lasers (cilindro magenta)
-    const mk=off=>{
-      const geo=new THREE.CylinderGeometry(0.08,0.08,1,6);
-      const mat=new THREE.MeshBasicMaterial({color:0xff66ff});
-      const b  =new THREE.Mesh(geo,mat);
-      b.rotation.z=Math.PI/2;
+    const mk = off => {
+      const geo = new THREE.PlaneGeometry(1, 0.16);  // muito leve
+      const mat = new THREE.MeshBasicMaterial({
+        color: 0xff66ff,
+        side : THREE.DoubleSide
+      });
+      const b = new THREE.Mesh(geo, mat);
+      b.rotation.y = Math.PI / 2;      // plano deitado
       b.position.copy(player.position);
-      b.position.x+=off;
+      b.position.x += off;
       bullets.push(b);
       scene.add(b);
     };
+  
     doubleShot ? (mk(-0.25), mk(0.25)) : mk(0);
   
-    // som com cool-down
-    if(now-lastLaserSound>LASER_SOUND_COOLDOWN){
+    if(now - lastLaserSound > LASER_SOUND_COOLDOWN){
       playSFX(sfxLaser);
-      lastLaserSound=now;
+      lastLaserSound = now;
     }
   }
+  
 
 function spawnEnemy(){
   const s=1+(Math.random()-0.5)*0.6;
@@ -269,7 +273,7 @@ function animate(t){
       b.position.y += 1;
   
       /* rasto */
-      if(Math.random()<0.45){
+      if (Math.random() < PARTICLE_CHANCE) {
         const p = new THREE.Sprite(
           new THREE.SpriteMaterial({
             map:particleTex,
