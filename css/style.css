@@ -1,0 +1,103 @@
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { width:100%; height:100%; overflow:hidden; background:#000; cursor:auto; }
+
+/* Overlay elements */
+#ui, #menu, #pause-menu, #countdown, #bossbar {
+  position:fixed;
+  font-family:Arial,Helvetica,sans-serif;
+  z-index:10;
+  text-shadow:0 0 4px #000;
+  color:#fff;
+}
+
+#ui {
+  top:10px; left:10px;
+  font-size:18px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.heart {
+  width:24px; height:24px;
+  background:url('../heart.png') center/contain no-repeat;
+}
+
+#volume-controls {
+  position:fixed; top:10px; right:10px;
+  font-size:18px; z-index:10;
+}
+
+/* MENU */
+#menu {
+  top:0; left:0; width:100%; height:100%;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  background:url('../menu_screen.png') center/cover no-repeat;
+  opacity:0; transition:opacity 1.2s ease-in;
+  z-index:20;
+}
+#menu.fade-in { opacity:1; }
+#menu button {
+  margin:10px; padding:12px 28px;
+  font-size:24px; border:none;
+  background:#ff69b4; color:#000; font-weight:bold;
+  cursor:pointer; border-radius:10px;
+}
+#exit-button {
+  position:absolute; bottom:30px; right:30px;
+  padding:10px 20px; font-size:18px; border-radius:8px;
+}
+
+/* PAUSE */
+#pause-menu {
+  top:50%; left:50%; transform:translate(-50%,-50%);
+  text-align:center; opacity:0; transition:opacity .4s ease-in;
+}
+#pause-menu.fade-in { opacity:1; }
+#pause-menu button {
+  margin:10px; padding:10px 25px; font-size:20px;
+  border:none; background:#ff69b4; color:#000; font-weight:bold;
+  border-radius:8px; cursor:pointer;
+}
+
+/* GAMEOVER */
+#gameover {
+  position:fixed; top:50%; left:50%;
+  transform:translate(-50%,-50%);
+  font-size:32px; text-align:center;
+  display:none; z-index:20; color:#fff;
+}
+#restart {
+  margin-top:12px; padding:8px 16px;
+  border:none; background:#ff69b4; color:#000;
+  font-weight:bold; font-size:18px; border-radius:8px;
+  cursor:pointer;
+}
+
+/* SHIELD HUD */
+#shield-icon {
+  width:26px; height:26px;
+  background:url('../shield.png') center/contain no-repeat;
+  animation:pulse .8s infinite alternate;
+  display:none;
+}
+@keyframes pulse { from{transform:scale(1);} to{transform:scale(1.25);} }
+
+/* COUNTDOWN */
+#countdown {
+  top:50%; left:50%; transform:translate(-50%,-50%);
+  font-size:110px; display:none; z-index:25;
+}
+
+/* BOSS BAR */
+#bossbar {
+  top:8px; left:50%; transform:translateX(-50%);
+  width:300px; height:18px;
+  border:2px solid #fff; border-radius:9px;
+  display:none;
+}
+#bossbar-inner {
+  height:100%; background:#ff3030;
+  border-radius:7px; transition:width .2s;
+}
