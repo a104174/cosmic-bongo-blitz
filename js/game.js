@@ -200,29 +200,38 @@ function spawnBoss(){
   playSFX(sfxBoss);
 }
 
+/* ---------- BOSS LASER ---------- */
 function spawnBossLaser(){
   if (!boss) return;
 
-  const sprite = new THREE.Sprite(
-    new THREE.SpriteMaterial({
-      map: bossLaserTex,
-      transparent: true,
-      opacity: 1.0,              // mais visível
-      color: 0xff00ff            // brilho magenta
-    })
-  );
-  sprite.scale.set(0.3, 2.8, 1); // visível e mais longo
-  sprite.position.copy(boss.position);
+  // geometria fina e comprida (apontada no +Y por defeito)
+  const geo = new THREE.PlaneGeometry(0.35, 3.2, 1, 1);
 
+  const mat = new THREE.MeshBasicMaterial({
+    map        : bossLaserTex,   // textura sci‑fi
+    transparent: true,
+    opacity    : 1.0,
+    color      : 0xff55ff,       // brilho magenta
+    side       : THREE.DoubleSide
+  });
+
+  const laser = new THREE.Mesh(geo, mat);
+  laser.position.copy(boss.position);
+
+  /* --- direccionar o plano para o jogador --- */
   const dir = new THREE.Vector3().subVectors(player.position, boss.position).normalize();
-  sprite.userData = {dir};
+  laser.userData = { dir };                    // para mover no animate()
 
-  // Corrigir orientação: aplicar rotação com base em direção
-  const angle = Math.atan2(dir.y, dir.x);
-  sprite.material.rotation = angle - Math.PI / 2; // ajusta visualmente
+  /* alinha o +Y da geometria com o vector 'dir' */
+  const up    = new THREE.Vector3(0, 1, 0);
+  const quat  = new THREE.Quaternion().setFromUnitVectors(up, dir);
+  laser.quaternion.copy(quat);
 
-  bossLaser = sprite;
-  scene.add(bossLaser);
+  /* ligeiro deslocamento para frente da nave  */
+  laser.position.addScaledVector(dir, 1.6);   // não disparar de “dentro” do boss
+
+  bossLaser = laser;
+  scene.add(laser);
 }
 
 
