@@ -47,6 +47,7 @@ const heartTex   = L.load('./assets/images/heart.png');
 const shieldTex  = L.load('./assets/images/shield.png');
 const doubleTex  = L.load('./assets/images/double.png');
 const slowTex    = L.load('./assets/images/slow.png');
+const bossLaserTex = L.load('./assets/images/boss_laser.png');  // ← novo
 const particleTex= L.load('./assets/images/particle.png');
 L.load('./assets/images/bg.png', t => scene.background = t);
 
@@ -201,15 +202,24 @@ function spawnBoss(){
 
 function spawnBossLaser(){
   if(!boss) return;
-  const geo=new THREE.BoxGeometry(0.25,0.25,2);
-  const mat=new THREE.MeshBasicMaterial({color:0xff00ff});
-  bossLaser=new THREE.Mesh(geo,mat);
-  bossLaser.position.copy(boss.position);
-  const dir=new THREE.Vector3().subVectors(player.position,boss.position).normalize();
-  bossLaser.userData={dir};
-  bossLaser.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),dir);
-  scene.add(bossLaser);
+
+  const sprite = new THREE.Sprite(
+    new THREE.SpriteMaterial({map: bossLaserTex, transparent: true})
+  );
+  sprite.scale.set(0.3, 2.5, 1);  // ajusta o tamanho conforme necessário
+  sprite.position.copy(boss.position);
+
+  const dir = new THREE.Vector3().subVectors(player.position, boss.position).normalize();
+  sprite.userData = {dir};
+  
+  // Rotação visual do sprite para apontar para o jogador
+  const angle = Math.atan2(dir.y, dir.x);
+  sprite.material.rotation = angle;
+
+  bossLaser = sprite;
+  scene.add(sprite);
 }
+
 
 /* ---------- POWER-UPS ---------- */
 function collect(type){
