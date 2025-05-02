@@ -80,6 +80,10 @@ const shieldHUD=document.getElementById('shield-icon');
 const countEl=document.getElementById('countdown');
 const bossBar=document.getElementById('bossbar');
 const bossIn =document.getElementById('bossbar-inner');
+const radarCanvas = document.getElementById('radar');
+const rCtx        = radarCanvas.getContext('2d');
+const RADAR_R     = radarCanvas.width / 2;     
+const RADAR_SCALE = RADAR_R / 20;  // 1 unidade de jogo ≃ 1/20 do radar
 
 /* ---------- UI helpers ---------- */
 function renderLives(){
@@ -233,6 +237,14 @@ function damagePlayer(){
   if(lives<=0){alive=false;gameOver();}
 }
 
+function radarPlot(dx, dy, color = '#ff0'){
+  const rx = RADAR_R + dx * RADAR_SCALE;
+  const ry = RADAR_R - dy * RADAR_SCALE;       // inversão eixo‑y p/ canvas
+  if(rx<2||rx>radarCanvas.width-2||ry<2||ry>radarCanvas.height-2) return;
+  rCtx.fillStyle = color;
+  rCtx.fillRect(rx-2, ry-2, 4, 4);             // ponto 4×4
+}
+
 /* ---------- MAIN LOOP ---------- */
 let prevTime=performance.now();
 function animate(t){
@@ -326,6 +338,32 @@ function animate(t){
       scene.remove(p);powerUps.splice(pi,1);
     }
   });
+
+  /* ---------- RADAR ---------- */
+  rCtx.clearRect(0, 0, radarCanvas.width, radarCanvas.height);
+
+  // círculo exterior
+  rCtx.strokeStyle='#fff';
+  rCtx.lineWidth = 1;
+  rCtx.beginPath();
+  rCtx.arc(RADAR_R, RADAR_R, RADAR_R-2, 0, Math.PI*2);
+  rCtx.stroke();
+  
+  // player (centro)
+  rCtx.fillStyle = '#0f0';
+  rCtx.fillRect(RADAR_R-2, RADAR_R-2, 4, 4);
+  
+  // inimigos
+  enemies.forEach(e=>{
+    radarPlot(e.position.x - player.position.x,
+              e.position.y - player.position.y, '#ff0');
+  });
+  
+  // boss (se existir)
+  if(boss){
+    radarPlot(boss.position.x - player.position.x,
+              boss.position.y - player.position.y, '#f00');
+  }  
 
   renderer.render(scene,camera);
 }
