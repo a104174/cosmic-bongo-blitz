@@ -201,23 +201,28 @@ function spawnBoss(){
 }
 
 function spawnBossLaser(){
-  if(!boss) return;
+  if (!boss) return;
 
   const sprite = new THREE.Sprite(
-    new THREE.SpriteMaterial({map: bossLaserTex, transparent: true})
+    new THREE.SpriteMaterial({
+      map: bossLaserTex,
+      transparent: true,
+      opacity: 1.0,              // mais visível
+      color: 0xff00ff            // brilho magenta
+    })
   );
-  sprite.scale.set(0.3, 2.5, 1);  // ajusta o tamanho conforme necessário
+  sprite.scale.set(0.3, 2.8, 1); // visível e mais longo
   sprite.position.copy(boss.position);
 
   const dir = new THREE.Vector3().subVectors(player.position, boss.position).normalize();
   sprite.userData = {dir};
-  
-  // Rotação visual do sprite para apontar para o jogador
+
+  // Corrigir orientação: aplicar rotação com base em direção
   const angle = Math.atan2(dir.y, dir.x);
-  sprite.material.rotation = angle;
+  sprite.material.rotation = angle - Math.PI / 2; // ajusta visualmente
 
   bossLaser = sprite;
-  scene.add(sprite);
+  scene.add(bossLaser);
 }
 
 
