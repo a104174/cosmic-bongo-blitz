@@ -4,7 +4,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.m
 const ENEMY_SPEED         = 0.03;
 const BOSS_INTERVAL       = 30_000;
 const BOSS_HP_MAX         = 20;
-const LASER_SPEED         = 0.07;
+const LASER_SPEED         = 0.04;
 const BOSS_LASER_INTERVAL = 1800;
 const BULLET_COOLDOWN     = 250;
 const LASER_SOUND_COOLDOWN= 200;
@@ -205,13 +205,13 @@ function spawnBossLaser(){
   if (!boss) return;
 
   // geometria fina e comprida (apontada no +Y por defeito)
-  const geo = new THREE.PlaneGeometry(0.35, 3.2, 1, 1);
+  const geo = new THREE.BoxGeometry(0.6, 0.12, 0.12);
 
   const mat = new THREE.MeshBasicMaterial({
     map        : bossLaserTex,   // textura sci‑fi
     transparent: true,
     opacity    : 1.0,
-    color      : 0xff55ff,       // brilho magenta
+    color      : 0x00ff99,       // brilho magenta
     side       : THREE.DoubleSide
   });
 
