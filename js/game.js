@@ -205,13 +205,13 @@ function spawnBossLaser(){
   if (!boss) return;
 
   // geometria fina e comprida (apontada no +Y por defeito)
-  const geo = new THREE.BoxGeometry(0.6, 0.12, 0.12);
+  const geo = new THREE.PlaneGeometry(0.35, 3.2, 1, 1);
 
   const mat = new THREE.MeshBasicMaterial({
     map        : bossLaserTex,   // textura sci‑fi
     transparent: true,
     opacity    : 1.0,
-    color      : 0x00ff99,       // brilho magenta
+    color      : 0xff55ff,       // brilho magenta
     side       : THREE.DoubleSide
   });
 
